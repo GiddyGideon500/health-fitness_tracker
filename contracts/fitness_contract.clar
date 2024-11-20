@@ -30,3 +30,49 @@
 (define-constant ERR_INVALID_WORKOUT_ROUTINE (err u405))  ;; Error for invalid or empty workout routine list
 
 ;; Public function to register a new user profile
+(define-public (register-user-profile 
+    (full-name (string-ascii 100))
+    (age uint)
+    (weight uint)
+    (height uint)
+    (fitness-goal (string-ascii 100))
+    (workout-routines (list 10 (string-ascii 100))))
+    (let
+        (
+            (caller tx-sender)
+            (existing-profile (map-get? user-profiles caller))  ;; Check if the user already has a profile
+        )
+        ;; Ensure the user does not have an existing profile
+        (if (is-none existing-profile)
+            (begin
+                ;; Validate user inputs for age, weight, height, etc.
+                (if (or (is-eq full-name "")
+                        (< age u18)
+                        (> age u120)
+                        (< weight u30) ;; Minimum weight validation
+                        (> weight u500) ;; Maximum weight validation
+                        (< height u50) ;; Minimum height validation
+                        (> height u250) ;; Maximum height validation
+                        (is-eq fitness-goal "")
+                        (is-eq (len workout-routines) u0)) ;; Ensure workout routines are provided
+                    (err ERR_INVALID_AGE) ;; Handle invalid input
+                    (begin
+                        ;; Store the new user profile in the `user-profiles` map
+                        (map-set user-profiles caller
+                            {
+                                full-name: full-name,
+                                age: age,
+                                weight: weight,
+                                height: height,
+                                fitness-goal: fitness-goal,
+                                workout-routines: workout-routines
+                            }
+                        )
+                        (ok "Profile successfully registered.") ;; Return success message
+                    )
+                )
+            )
+            (err ERR_PROFILE_ALREADY_EXISTS) ;; Error if profile already exists
+        )
+    )
+)
