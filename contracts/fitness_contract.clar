@@ -28,3 +28,5 @@
 (define-constant ERR_INVALID_HEIGHT (err u403))  ;; Error for invalid height input (must be between 50cm and 250cm)
 (define-constant ERR_INVALID_FITNESS_GOAL (err u404))  ;; Error for invalid or empty fitness goal input
 (define-constant ERR_INVALID_WORKOUT_ROUTINE (err u405))  ;; Error for invalid or empty workout routine list
+
+;; Public function to register a new user profile
