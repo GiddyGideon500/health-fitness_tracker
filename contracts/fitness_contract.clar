@@ -76,3 +76,75 @@
         )
     )
 )
+
+;; Public function to update an existing user profile
+(define-public (update-user-profile
+    (full-name (string-ascii 100))
+    (age uint)
+    (weight uint)
+    (height uint)
+    (fitness-goal (string-ascii 100))
+    (workout-routines (list 10 (string-ascii 100))))
+    (let
+        (
+            (caller tx-sender)
+            (existing-profile (map-get? user-profiles caller))  ;; Check if the user has an existing profile
+        )
+        ;; Ensure the profile exists before allowing updates
+        (if (is-some existing-profile)
+            (begin
+                ;; Validate user inputs for updates
+                (if (or (is-eq full-name "")
+                        (< age u18)
+                        (> age u120)
+                        (< weight u30) ;; Minimum weight validation
+                        (> weight u500) ;; Maximum weight validation
+                        (< height u50) ;; Minimum height validation
+                        (> height u250) ;; Maximum height validation
+                        (is-eq fitness-goal "")
+                        (is-eq (len workout-routines) u0)) ;; Ensure workout routines are provided
+                    (err ERR_INVALID_AGE) ;; Handle invalid input
+                    (begin
+                        ;; Update the existing user profile in the `user-profiles` map
+                        (map-set user-profiles caller
+                            {
+                                full-name: full-name,
+                                age: age,
+                                weight: weight,
+                                height: height,
+                                fitness-goal: fitness-goal,
+                                workout-routines: workout-routines
+                            }
+                        )
+                        (ok "Profile successfully updated.") ;; Return success message
+                    )
+                )
+            )
+            (err ERR_PROFILE_NOT_FOUND) ;; Error if the profile does not exist
+        )
+    )
+)
+
+;; Read-only function to retrieve a user profile
+(define-read-only (get-user-profile (user principal))
+    (match (map-get? user-profiles user)
+        profile (ok profile)
+        ERR_PROFILE_NOT_FOUND  ;; Return error if profile is not found
+    )
+)
+
+;; Read-only function to retrieve the user's workout routines
+(define-read-only (get-user-workout-routines (user principal))
+    (match (map-get? user-profiles user)
+        profile (ok (get workout-routines profile))
+        ERR_PROFILE_NOT_FOUND  ;; Return error if profile is not found
+    )
+)
+
+;; Read-only function to retrieve the user's fitness goal
+(define-read-only (get-user-fitness-goal (user principal))
+    (match (map-get? user-profiles user)
+        profile (ok (get fitness-goal profile))
+        ERR_PROFILE_NOT_FOUND  ;; Return error if profile is not found
+    )
+)
