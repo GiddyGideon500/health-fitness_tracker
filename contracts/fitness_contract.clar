@@ -1,47 +1,30 @@
-;; Multi-Signature Wallet Contract
-;;
-;; This smart contract implements a decentralized multi-signature wallet 
-;; where multiple authorized owners must approve transactions before they 
-;; can be executed. The contract now includes functionality to retrieve 
-;; a list of authorized owners.
+;; Health and Fitness Tracker Smart Contract
+;; This contract enables users to register, update, and retrieve their personalized health and fitness profiles.
+;; Users can manage key data related to their fitness journey, such as personal details, health metrics, and workout plans.
+;; It stores information such as a user's full name, age, weight, height, fitness goals, and workout routines.
 
-;; Error constants for transaction handling
-(define-constant ERR-NOT-AUTHORIZED (err u100))      ;; Unauthorized access attempt
-(define-constant ERR-ALREADY-EXECUTED (err u101))   ;; Transaction already executed
-(define-constant ERR-INVALID-THRESHOLD (err u102))   ;; Invalid approval threshold
-(define-constant ERR-DUPLICATE_SIGNATURE (err u103)) ;; Signature already recorded
-(define-constant ERR-INSUFFICIENT_SIGNATURES (err u104)) ;; Not enough signatures to execute
-(define-constant ERR-INVALID_RECIPIENT (err u105))   ;; Invalid recipient address
-(define-constant ERR-INVALID_AMOUNT (err u106))      ;; Invalid transaction amount
-(define-constant ERR-TRANSFER_FAILED (err u107))     ;; STX transfer failure
-(define-constant ERR-TRANSACTION-NOT-PENDING (err u108)) ;; Transaction cannot be canceled
-(define-constant ERR-ALREADY-CANCELED (err u109))    ;; Transaction already canceled
-(define-constant ERR-OWNERS-LIST-FULL (err u110))    ;; Maximum number of owners reached
+;; `user-profiles` map holds the user data:
+;; - The key is the user's principal (address).
+;; - The value is a record containing user's full name, age, weight, height, fitness goal, and workout routines.
 
-;; Configuration data: stores the approval threshold and current transaction ID
-(define-data-var approval-threshold uint u2) ;; Minimum number of signatures required for a transaction
-(define-data-var current-transaction-id uint u0) ;; Tracks the next available transaction ID
-
-;; Owner registry: stores authorized owners' principal addresses
-(define-map authorized-owners principal bool)
-
-;; List of owners to maintain order and enable listing
-(define-data-var owners-list (list 20 principal) (list))
-
-;; Transaction records: stores the details of each transaction
-(define-map transaction-records 
-    uint ;; Transaction ID
+(define-map user-profiles
+    principal
     {
-        recipient: principal, ;; Recipient of the transaction
-        amount: uint,          ;; Amount to transfer
-        executed: bool,       ;; Whether the transaction has been executed
-        canceled: bool,       ;; Whether the transaction has been canceled
-        signatures-count: uint ;; Number of signatures for approval
+        full-name: (string-ascii 100),  ;; User's full name (up to 100 characters)
+        age: uint,                      ;; User's age (in years, must be between 18 and 120)
+        weight: uint,                   ;; User's weight (in kilograms, should be between 30kg and 500kg)
+        height: uint,                   ;; User's height (in centimeters, should be between 50cm and 250cm)
+        fitness-goal: (string-ascii 100),  ;; User's fitness goal (e.g., "Lose weight", "Gain muscle", etc.)
+        workout-routines: (list 10 (string-ascii 100))  ;; List of user's workout routines (up to 10 routines, each up to 100 characters)
     }
 )
 
-;; Transaction signatures: tracks which owners have signed each transaction
-(define-map transaction-signatures 
-    {transaction-id: uint, owner: principal} 
-    bool
-)
+;; Custom error constants to handle specific errors:
+(define-constant ERR_PROFILE_NOT_FOUND (err u404))  ;; Error when the user profile does not exist in the system
+(define-constant ERR_PROFILE_ALREADY_EXISTS (err u409))  ;; Error when a user attempts to register an existing profile
+(define-constant ERR_INVALID_AGE (err u400))  ;; Error for invalid age input (must be between 18 and 120)
+(define-constant ERR_INVALID_NAME (err u401))  ;; Error for invalid or empty name input
+(define-constant ERR_INVALID_WEIGHT (err u402))  ;; Error for invalid weight input (must be between 30kg and 500kg)
+(define-constant ERR_INVALID_HEIGHT (err u403))  ;; Error for invalid height input (must be between 50cm and 250cm)
+(define-constant ERR_INVALID_FITNESS_GOAL (err u404))  ;; Error for invalid or empty fitness goal input
+(define-constant ERR_INVALID_WORKOUT_ROUTINE (err u405))  ;; Error for invalid or empty workout routine list

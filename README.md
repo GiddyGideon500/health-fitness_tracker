@@ -1,112 +1,109 @@
-# Multi-Signature Wallet Contract
+# Health and Fitness Tracker Smart Contract
 
-## Overview
-
-This smart contract implements a decentralized **multi-signature wallet** where multiple authorized owners must approve a transaction before it can be executed. This ensures that transactions are secure and require consensus from a group of owners, rather than relying on a single individual. The contract supports a configurable **approval threshold**, meaning a minimum number of signatures must be obtained before a transaction is processed.
-
-The contract also includes functionality for retrieving the list of authorized owners, adding or removing owners, and tracking the status of pending transactions.
+This smart contract enables users to register, update, and retrieve their personalized health and fitness profiles on the blockchain. It provides a decentralized solution for users to manage key data related to their fitness journey, such as personal details, health metrics, and workout plans. The contract ensures data integrity and privacy, making it ideal for users who want to securely track and manage their health and fitness progress.
 
 ## Features
 
-- **Multi-Signature Transactions**: Requires multiple approvals from authorized owners before a transaction can be executed.
-- **Transaction Tracking**: Allows tracking of the transaction ID, amount, recipient, and status (executed, canceled).
-- **Owner Management**: Easily manage the list of owners with functionalities for adding and removing owners.
-- **Threshold Configuration**: The number of signatures required to approve a transaction is configurable.
+- **User Registration**: Allows users to register a profile with key health and fitness details.
+- **Profile Update**: Users can update their profile information at any time.
+- **Profile Retrieval**: Retrieve the user's full profile, including workout routines and fitness goals.
+- **Data Validation**: Ensures that input data, such as age, weight, height, and workout routines, are within specified valid ranges.
+- **Error Handling**: Handles specific error messages for invalid inputs and duplicate profile registrations.
 
-## Error Constants
+## Smart Contract Structure
 
-The contract defines several error constants to handle various transaction scenarios:
+The contract is composed of the following key components:
 
-- `ERR-NOT-AUTHORIZED`: Unauthorized access attempt.
-- `ERR-ALREADY-EXECUTED`: Transaction has already been executed.
-- `ERR-INVALID-THRESHOLD`: The threshold for transaction approvals is invalid.
-- `ERR-DUPLICATE_SIGNATURE`: Signature already recorded for this transaction.
-- `ERR-INSUFFICIENT_SIGNATURES`: Not enough signatures to execute the transaction.
-- `ERR-INVALID_RECIPIENT`: Invalid recipient address.
-- `ERR-INVALID_AMOUNT`: Invalid transaction amount.
-- `ERR-TRANSFER_FAILED`: STX transfer failure.
-- `ERR-TRANSACTION-NOT-PENDING`: The transaction cannot be canceled as it is not pending.
-- `ERR-ALREADY-CANCELED`: Transaction has already been canceled.
-- `ERR-OWNERS-LIST-FULL`: The maximum number of owners has been reached.
+### `user-profiles` Map
 
-## Configuration
+A mapping structure that stores user profiles:
 
-The contract stores configuration data including the **approval threshold** and the **current transaction ID**:
+- **Key**: The user's principal (address).
+- **Value**: A record containing:
+  - `full-name`: User's full name (up to 100 characters)
+  - `age`: User's age (in years, must be between 18 and 120)
+  - `weight`: User's weight (in kilograms, between 30kg and 500kg)
+  - `height`: User's height (in centimeters, between 50cm and 250cm)
+  - `fitness-goal`: User's fitness goal (e.g., "Lose weight", "Gain muscle")
+  - `workout-routines`: A list of workout routines (up to 10 routines, each up to 100 characters)
 
-- `approval-threshold`: The minimum number of signatures required to approve a transaction. Initially set to 2.
-- `current-transaction-id`: Tracks the next available transaction ID, starting from 0.
+### Error Constants
 
-## Data Structures
-
-### Authorized Owners
-
-- **authorized-owners**: A map that stores the principal addresses of authorized owners and their approval status.
-
-- **owners-list**: A list that maintains the order of owners, which also enables fetching a list of authorized owners.
-
-### Transactions
-
-- **transaction-records**: A map that stores transaction details for each transaction ID. Each transaction record includes:
-  - `recipient`: The recipient's principal address.
-  - `amount`: The amount to be transferred in the transaction.
-  - `executed`: Boolean flag indicating whether the transaction has been executed.
-  - `canceled`: Boolean flag indicating whether the transaction has been canceled.
-  - `signatures-count`: The number of signatures obtained for the transaction.
-
-- **transaction-signatures**: A map that tracks which owners have signed a transaction by recording the transaction ID and the owner’s principal address.
+- **ERR_PROFILE_NOT_FOUND**: Triggered when the profile does not exist.
+- **ERR_PROFILE_ALREADY_EXISTS**: Triggered when a user attempts to register a profile that already exists.
+- **ERR_INVALID_AGE**: Triggered when an invalid age is provided.
+- **ERR_INVALID_NAME**: Triggered when an invalid name is provided.
+- **ERR_INVALID_WEIGHT**: Triggered when an invalid weight is provided.
+- **ERR_INVALID_HEIGHT**: Triggered when an invalid height is provided.
+- **ERR_INVALID_FITNESS_GOAL**: Triggered when an invalid fitness goal is provided.
+- **ERR_INVALID_WORKOUT_ROUTINE**: Triggered when an invalid or empty workout routine list is provided.
 
 ## Functions
 
-### 1. **Add Owner**
+### `register-user-profile`
 
-Adds a new owner to the multi-signature wallet. If the owner's address already exists, the contract will return an error.
+- **Purpose**: Registers a new user profile.
+- **Parameters**:
+  - `full-name`: User's full name (up to 100 characters).
+  - `age`: User's age (must be between 18 and 120).
+  - `weight`: User's weight (must be between 30kg and 500kg).
+  - `height`: User's height (must be between 50cm and 250cm).
+  - `fitness-goal`: User's fitness goal (e.g., "Lose weight", "Gain muscle").
+  - `workout-routines`: List of up to 10 workout routines (each up to 100 characters).
+- **Returns**: Success message if the profile is successfully registered, otherwise returns an error message.
+- **Validation**: Ensures that all provided data is valid and that the profile does not already exist.
 
-### 2. **Remove Owner**
+### `update-user-profile`
 
-Removes an owner from the multi-signature wallet. This operation can only be performed by other owners.
+- **Purpose**: Updates an existing user profile.
+- **Parameters**:
+  - Same as `register-user-profile`.
+- **Returns**: Success message if the profile is successfully updated, otherwise returns an error message.
+- **Validation**: Ensures that the user has an existing profile and that the updated data is valid.
 
-### 3. **Submit Transaction**
+### `get-user-profile`
 
-Submits a transaction to be approved by the owners. The transaction will be stored in the contract, and owners can sign it to approve it.
+- **Purpose**: Retrieves the user's complete profile.
+- **Parameters**: `user`: The principal (address) of the user.
+- **Returns**: The user's profile if it exists, otherwise returns an error message.
 
-### 4. **Sign Transaction**
+### `get-user-workout-routines`
 
-Owners can sign a transaction to indicate their approval. Once the required number of signatures (as defined by the approval threshold) is obtained, the transaction can be executed.
+- **Purpose**: Retrieves the user's workout routines.
+- **Parameters**: `user`: The principal (address) of the user.
+- **Returns**: A list of the user's workout routines if they exist, otherwise returns an error message.
 
-### 5. **Execute Transaction**
+### `get-user-fitness-goal`
 
-If a transaction has received enough signatures, it can be executed, transferring the specified amount to the recipient.
+- **Purpose**: Retrieves the user's fitness goal.
+- **Parameters**: `user`: The principal (address) of the user.
+- **Returns**: The user's fitness goal if it exists, otherwise returns an error message.
 
-### 6. **Cancel Transaction**
+## Error Handling
 
-Allows the cancellation of a transaction before it is executed. If the transaction is already executed or canceled, this function will return an error.
+This contract ensures that users are informed of errors with descriptive messages:
 
-### 7. **Get Owners**
+- **ERR_PROFILE_NOT_FOUND**: If the user's profile cannot be found when attempting to retrieve or update it.
+- **ERR_PROFILE_ALREADY_EXISTS**: If the user tries to register a profile that already exists.
+- **ERR_INVALID_AGE**: If the age is outside the allowed range (18-120 years).
+- **ERR_INVALID_NAME**: If the name is empty or invalid.
+- **ERR_INVALID_WEIGHT**: If the weight is outside the allowed range (30kg-500kg).
+- **ERR_INVALID_HEIGHT**: If the height is outside the allowed range (50cm-250cm).
+- **ERR_INVALID_FITNESS_GOAL**: If the fitness goal is empty or invalid.
+- **ERR_INVALID_WORKOUT_ROUTINE**: If no workout routines are provided or if they are invalid.
 
-Retrieves the list of all authorized owners in the multi-signature wallet.
+## Deployment
 
-### 8. **Get Transaction Status**
-
-Returns the status of a particular transaction, indicating whether it is pending, executed, or canceled.
-
-## Example Workflow
-
-1. Owners are added to the wallet.
-2. A transaction is submitted with a recipient address and amount.
-3. Each owner signs the transaction.
-4. Once the minimum number of signatures (approval threshold) is reached, the transaction is executed and the amount is transferred to the recipient.
-
-## Use Cases
-
-- **Decentralized Finance (DeFi)**: A multi-signature wallet can be used to manage funds in decentralized finance protocols.
-- **Corporate Treasury**: Companies can use multi-signature wallets to manage funds with approval from multiple executives or stakeholders.
-- **Shared Ownership**: Groups of individuals can use the wallet for shared asset management, ensuring that no single person can control the funds.
+To deploy this contract on the Clarity blockchain, use the standard deployment tools provided by the Clarity framework. Ensure that you have a proper wallet setup and sufficient funds to cover transaction costs.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This smart contract is licensed under the MIT License. See LICENSE for more information.
 
 ## Contributing
 
-Contributions are welcome! Please fork this repository and create a pull request to suggest changes or improvements. Make sure to follow the coding standards and include proper tests for your changes.
+We welcome contributions to improve this project. Please feel free to open issues or submit pull requests.
 
+## Contact
+
+For any inquiries or support, please reach out to [your-email@example.com].
